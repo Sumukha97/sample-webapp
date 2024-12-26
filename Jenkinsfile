@@ -1,4 +1,4 @@
-@Library('Jenkins-Shared-Library') _
+@Library('Jenkins-Shared-library') _
 def mvnCommand = env.mvncommand ?: 'install'
 def deployEnv = env.DeploymentEnvironment ?: 'staging'
 pipeline {
