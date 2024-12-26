@@ -52,8 +52,8 @@ pipeline {
             steps {
                 sh '''
                 cp -r /home/ubuntu/workspace/Pipeline_job/target/sample-webapp.war /home/ubuntu/tomcat/tomcat10/webapps
-                sudo /usr/tomcat/tomcat10/bin/shutdown.sh
-                sudo /usr/tomcat/tomcat10/bin/startup.sh
+                sudo /home/ubuntu/tomcat/tomcat10/bin/shutdown.sh
+                sudo /home/ubuntu/tomcat/tomcat10/bin/startup.sh
                 '''
             }
         }
