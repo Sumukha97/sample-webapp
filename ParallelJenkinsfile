@@ -42,7 +42,7 @@ pipeline {
             agent { label 'Slave1' } // Reuse the same server for deployment
             steps {
                 configFileProvider([
-                    configFile(fileId: 'f908b2e4-7249-426e-8b20-ab7bb953e1c2', variable: 'MAVEN_SETTINGS')
+                    configFile(fileId: '43451ce4-2e0a-4607-90e2-7b8b605833db', variable: 'MAVEN_SETTINGS')
                 ]) {
                     sh '''
                     mvn deploy -s $MAVEN_SETTINGS
