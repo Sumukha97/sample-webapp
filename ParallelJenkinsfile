@@ -28,7 +28,7 @@ pipeline {
                 }
 
                 stage('Test') {
-                    agent { label 'Slave2' } // Specify another server for testing
+                    agent { label 'Slave1' } // Specify another server for testing
                     steps {
                         sh '''
                         mvn test
