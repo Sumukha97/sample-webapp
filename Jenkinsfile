@@ -46,9 +46,16 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to Tomcat') {
+            agent { label 'Slave1' } // Specify the server for Tomcat deployment
+            steps {
+                sh '''
+                cp -r /home/ubuntu/workspace/Pipeline_job/target/sample-webapp.war /home/ubuntu/tomcat/tomcat10/webapps
+                sudo /usr/tomcat/tomcat10/bin/shutdown.sh
+                sudo /usr/tomcat/tomcat10/bin/startup.sh
+                '''
+            }
+        }
     }
 }
-
-                                       
-                            
-                                       
