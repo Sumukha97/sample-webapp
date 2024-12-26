@@ -55,7 +55,7 @@ pipeline {
             agent { label 'Slave1' } // Specify the server for Tomcat deployment
             steps {
                 sh '''
-                cp -r /home/ubuntu/workspace/CI_CD_Pipeline/target/sample-webapp.war/home/ubuntu/tomcat/tomcat10/webapps
+                cp -r /home/ubuntu/workspace/CI_CD_Pipeline/target/sample-webapp.war /home/ubuntu/tomcat/tomcat10/webapps
                 sudo /home/ubuntu/tomcat/tomcat10/bin/shutdown.sh
                 sudo /home/ubuntu/tomcat/tomcat10/bin/startup.sh
                 '''
