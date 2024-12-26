@@ -1,10 +1,15 @@
+@Library('Jenkins-Shared-Library') _
+def mvnCommand = env.mvncommand ?: 'install'
+def deployEnv = env.DeploymentEnvironment ?: 'staging'
 pipeline {
-    agent none // No default agent; specify agents per stage
+    agent none 
 
     stages {
         stage('Checkout Code') {
-            agent { label 'Slave' } // Specify the server for SCM
-            steps {
+            agent { label 'Slave' } 
+            steps { 
+                echo "This is the Url from shared Library: ${constants.gitUrl}"
+                echo "This is the password from shared Library: ${constants.password}"
                 checkout([
                     $class: 'GitSCM', 
                     branches: [[name: '*/main']],
@@ -17,7 +22,7 @@ pipeline {
         }
 
         stage('Build') {
-            agent { label 'Slave1' } // Specify the server for Maven build
+            agent { label 'Slave1' } 
             steps {
                 sh '''
                 mvn clean install
@@ -26,7 +31,7 @@ pipeline {
         }
 
         stage('Test') {
-            agent { label 'Slave1' } // Reuse the same server for testing
+            agent { label 'Slave1' } 
             steps {
                 sh '''
                 mvn test
@@ -35,10 +40,10 @@ pipeline {
         }
 
         stage('Deploy to Artifactory') {
-            agent { label 'Slave1' } // Reuse the same server for deployment
+            agent { label 'Slave1' } 
             steps {
                 configFileProvider([
-                    configFile(fileId: 'f908b2e4-7249-426e-8b20-ab7bb953e1c2', variable: 'MAVEN_SETTINGS')
+                    configFile(fileId: constants.artifactorysetting, variable: 'MAVEN_SETTINGS')
                 ]) {
                     sh '''
                     mvn deploy -s $MAVEN_SETTINGS
@@ -48,7 +53,7 @@ pipeline {
         }
 
         stage('Deploy to Tomcat') {
-            agent { label 'Slave1' } // Specify the server for Tomcat deployment
+            agent { label 'Slave1' } 
             steps {
                 sh '''
                 cp -r /home/ubuntu/workspace/Pipeline_job/target/sample-webapp.war /home/ubuntu/tomcat/tomcat10/webapps
