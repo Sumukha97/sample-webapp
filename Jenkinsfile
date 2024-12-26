@@ -22,7 +22,7 @@ pipeline {
         }
 
         stage('Build') {
-            agent { label 'Slave1' } 
+            agent { label 'Slave' } 
             steps {
                 sh '''
                 mvn clean ${mvncommand}
