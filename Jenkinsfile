@@ -25,7 +25,7 @@ pipeline {
             agent { label 'Slave1' } 
             steps {
                 sh '''
-                mvn clean install
+                mvn clean ${mvncommand}
                 '''
             }
         }
@@ -51,16 +51,23 @@ pipeline {
                 }
             }
         }
-
-        stage('Deploy to Tomcat') {
-            agent { label 'Slave1' } 
+        stage("Deploy To Environment") {
             steps {
-                sh '''
-                cp -r /home/ubuntu/workspace/Pipeline_job/target/sample-webapp.war /home/ubuntu/tomcat/tomcat10/webapps
-                sudo /home/ubuntu/tomcat/tomcat10/bin/shutdown.sh
-                sudo /home/ubuntu/tomcat/tomcat10/bin/startup.sh
-                '''
+                    sh '''
+                    echo "I am Deploying this war or application to ${deployEnv}"
+                    '''
+
             }
         }
+        // stage('Deploy to Tomcat') {
+        //     agent { label 'Slave1' } 
+        //     steps {
+        //         sh '''
+        //         cp -r /home/ubuntu/workspace/Pipeline_job/target/sample-webapp.war /home/ubuntu/tomcat/tomcat10/webapps
+        //         sudo /home/ubuntu/tomcat/tomcat10/bin/shutdown.sh
+        //         sudo /home/ubuntu/tomcat/tomcat10/bin/startup.sh
+        //         '''
+        //     }
+        // }
     }
 }
