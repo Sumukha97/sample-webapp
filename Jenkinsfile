@@ -1,26 +1,54 @@
 pipeline {
-    agent any
+    agent none // No default agent; specify agents per stage
 
     stages {
-        stage('Build') {
+        stage('Checkout Code') {
+            agent { label 'Slave' } // Specify the server for SCM
             steps {
-                echo 'Building the project...'
-            //sh 'mvn clean install'
+                checkout([
+                    $class: 'GitSCM', 
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/Sumukha97/sample-webapp.git', 
+                        credentialsId: 'github'
+                    ]]
+                ])
+            }
+        }
+
+        stage('Build') {
+            agent { label 'Slave1' } // Specify the server for Maven build
+            steps {
+                sh '''
+                mvn clean install
+                '''
             }
         }
 
         stage('Test') {
+            agent { label 'Slave1' } // Reuse the same server for testing
             steps {
-                echo 'Running tests...'
-               // sh 'mvn test'
+                sh '''
+                mvn test
+                '''
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Artifactory') {
+            agent { label 'Slave1' } // Reuse the same server for deployment
             steps {
-                echo 'Deploying the application...'
-                //sh 'scp target/myapp.war user@server:/path/to/deploy'
+                configFileProvider([
+                    configFile(fileId: 'f908b2e4-7249-426e-8b20-ab7bb953e1c2', variable: 'MAVEN_SETTINGS')
+                ]) {
+                    sh '''
+                    mvn deploy -s $MAVEN_SETTINGS
+                    '''
+                }
             }
         }
     }
 }
+
+                                       
+                            
+                                       
