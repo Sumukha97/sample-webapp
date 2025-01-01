@@ -14,8 +14,8 @@ pipeline {
                     $class: 'GitSCM', 
                     branches: [[name: '*/main']],
                     userRemoteConfigs: [[
-                                                url: constants.gitUrl, 
-                                                credentialsId: constants.password
+                        url: constants.gitUrl, 
+                        credentialsId: constants.password
                     ]]
                 ])
             }
@@ -39,6 +39,23 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            agent { label 'Slave1' } 
+            steps {
+                withSonarQubeEnv('SonarQube') { // Ensure you configure 'SonarQube' in Jenkins System Configuration
+                    sh '''
+                    mvn sonar:sonar \
+                      -Dsonar.projectKey=my_project_key \
+                      -Dsonar.projectName="My Project" \
+                      -Dsonar.projectVersion=1.0 \
+                      -Dsonar.sources=src \
+                      -Dsonar.host.url=http://13.201.67.50:9000 \
+                      -Dsonar.login=squ_aaea6bab6d942197fdde4bd99f0ba4789fa69198
+                    '''
+                }
+            }
+        }
+
         stage('Deploy to Artifactory') {
             agent { label 'Slave1' } 
             steps {
@@ -51,14 +68,16 @@ pipeline {
                 }
             }
         }
+        
         stage("Deploy To Environment") {
             steps {
-                    sh '''
-                    echo "I am Deploying this war or application to ${deployEnv}"
-                    '''
-
+                sh '''
+                echo "I am Deploying this war or application to ${deployEnv}"
+                '''
             }
         }
+        
+        // Uncomment if needed
         // stage('Deploy to Tomcat') {
         //     agent { label 'Slave1' } 
         //     steps {
