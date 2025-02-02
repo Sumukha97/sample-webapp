@@ -1,6 +1,5 @@
 pipeline {
-    agent any
-  // Use the slave_key1 node
+    agent any  // Run on any available agent
 
     environment {
         AWS_REGION = 'ap-south-1'  // Set your AWS region
@@ -17,7 +16,7 @@ pipeline {
                     echo "Cloning GitHub repository"
                     withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                         sh """
-                        git clone --branch ${GIT_BRANCH} https://github.com/Sumukha97/sample-webapp.git
+                        git clone https://${GITHUB_TOKEN}@github.com/Sumukha97/sample-webapp.git
                         cd sample-webapp
                         """
                     }
@@ -42,12 +41,13 @@ pipeline {
             steps {
                 script {
                     echo "Configuring AWS CLI"
-                    // Configure AWS CLI with credentials from environment variables
-                    sh '''
-                    aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-                    aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-                    aws configure set region ${AWS_REGION}
-                    '''
+                    withCredentials([usernamePassword(credentialsId: 'AWS_ACCESS_KEY_ID', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh '''
+                        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                        aws configure set region ${AWS_REGION}
+                        '''
+                    }
                 }
             }
         }
@@ -88,7 +88,6 @@ pipeline {
     post {
         always {
             echo "Cleaning up resources if any"
-            // Add any clean-up steps if necessary
         }
     }
 }
