@@ -17,7 +17,8 @@ RUN curl -L https://archive.apache.org/dist/tomcat/tomcat-10/v$TOMCAT_VERSION/bi
     rm /tmp/tomcat.tar.gz
 
 # Copy the web application to the Tomcat webapps directory
-COPY sample-webapp.war $CATALINA_HOME/webapps/
+COPY target/sample-webapp.war $CATALINA_HOME/webapps/
+
 
 
 # Expose the default Tomcat port
