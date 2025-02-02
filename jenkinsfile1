@@ -16,7 +16,8 @@ pipeline {
                     echo "Cloning GitHub repository"
                     withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                         sh """
-                        git clone https://${GITHUB_TOKEN}@github.com/Sumukha97/sample-webapp.git
+                        if [ -d "sample-webapp" ]; then rm -rf sample-webapp; fi
+                        git clone https://github.com/Sumukha97/sample-webapp.git
                         cd sample-webapp
                         """
                     }
