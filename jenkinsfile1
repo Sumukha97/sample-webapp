@@ -74,7 +74,7 @@ stage('Checkout Code') {
             steps {
                 script {
                     echo "Building Docker image..."
-                    sh 'docker build -t ${sample-webapp}:latest .'
+                    sh 'docker build -t ${ REPOSITORY_NAME}:latest .'
                 }
             }
         }
@@ -84,8 +84,8 @@ stage('Checkout Code') {
                 script {
                     echo "Tagging and pushing the Docker image to ECR"
                     sh """
-                    docker tag ${sample-webapp}:latest ${816069160812.dkr.ecr.ap-south-1.amazonaws.com/sample-webapp}/${sample-webapp}:latest
-                    docker push ${816069160812.dkr.ecr.ap-south-1.amazonaws.com/sample-webapp}/${sample-webapp}:latest
+                    docker tag ${REPOSITORY_NAME}:latest ${816069160812.dkr.ecr.ap-south-1.amazonaws.com/sample-webapp}/${REPOSITORY_NAME}:latest
+                    docker push ${816069160812.dkr.ecr.ap-south-1.amazonaws.com/sample-webapp}/${REPOSITORY_NAME}:latest
                     """
                 }
             }
