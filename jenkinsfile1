@@ -14,10 +14,12 @@ pipeline {
             steps {
                 script {
                     echo "Cloning GitHub repository"
-                    sh """
-                    git clone --branch ${GIT_BRANCH} ${GIT_URL}
-                    cd sample-webapp
-                    """
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                        git clone --branch ${GIT_BRANCH} https://github.com/Sumukha97/sample-webapp.git
+                        cd sample-webapp
+                        """
+                    }
                 }
             }
         }
