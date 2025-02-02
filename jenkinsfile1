@@ -1,44 +1,102 @@
 pipeline {
-    agent none // No default agent; specify agents per stage
+    agent { label 'slave_key1' }  // Use the slave_key1 node
+
+    environment {
+        AWS_REGION = 'ap-south-1'  // Set your AWS region
+        ECR_URI = '816069160812.dkr.ecr.ap-south-1.amazonaws.com'  // Your ECR URI
+        REPOSITORY_NAME = 'sample-webapp'  // Your ECR repository name
+        GIT_URL = 'https://github.com/your-username/sample-webapp.git'  // Your GitHub repository URL
+    }
 
     stages {
-        stage('Checkout Code') {
-            agent { label 'Slave' } // Specify the server for SCM
+        stage('Install AWS CLI') {
             steps {
-                checkout([
-                    $class: 'GitSCM', 
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/Sumukha97/sample-webapp.git', 
-                        credentialsId: 'github'
-                    ]]
-                ])
-            }
-        }
-
-        stage('Build') {
-            parallel {
-                stage('Build') {
-                    agent { label 'Slave1' } // Specify the server for Maven build
-                    steps {
-                        sh '''
-                        mvn clean install
-                        '''
-                    }
-                }
-
-                stage('Test') {
-                    agent { label 'Slave1' } // Specify another server for testing
-                    steps {
-                        sh '''
-                        mvn test
-                        '''
-                    }
+                script {
+                    echo "Installing AWS CLI v2"
+                    sh '''
+                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                    unzip awscliv2.zip
+                    sudo ./aws/install
+                    '''
                 }
             }
         }
 
-       
-    
+        stage('AWS Configuration') {
+            steps {
+                script {
+                    echo "Configuring AWS CLI"
+                    // Configure AWS CLI with credentials from environment variables
+                    sh '''
+                    aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                    aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                    aws configure set region ${ap-south-1}
+                    '''
+                }
+            }
+        }
+
+        stage('Checkout Code') {
+            steps {
+                script {
+                    echo "Cloning GitHub repository"
+                    sh """
+                    git clone ${GIT_URL}
+                    cd sample-webapp
+                    """
+                }
+            }
+        }
+
+        stage('Maven Build') {
+            steps {
+                script {
+                    echo "Building project with Maven"
+                    sh """
+                    cd sample-webapp
+                    mvn clean install
+                    """
+                }
+            }
+        }
+
+        stage('ECR Login') {
+            steps {
+                script {
+                    echo "Logging in to AWS ECR"
+                    sh """
+                    aws ecr get-login-password --region ${ap-south-1} | docker login --username AWS --password-stdin ${816069160812.dkr.ecr.ap-south-1.amazonaws.com/sample-webapp}
+                    """
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building Docker image..."
+                    sh 'docker build -t ${sample-webapp}:latest .'
+                }
+            }
+        }
+
+        stage('Tag and Push Docker Image') {
+            steps {
+                script {
+                    echo "Tagging and pushing the Docker image to ECR"
+                    sh """
+                    docker tag ${sample-webapp}:latest ${816069160812.dkr.ecr.ap-south-1.amazonaws.com/sample-webapp}/${sample-webapp}:latest
+                    docker push ${816069160812.dkr.ecr.ap-south-1.amazonaws.com/sample-webapp}/${sample-webapp}:latest
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Cleaning up resources if any"
+            // Add any clean-up steps if necessary
+        }
     }
 }
