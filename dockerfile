@@ -17,7 +17,7 @@ RUN curl -L https://archive.apache.org/dist/tomcat/tomcat-10/v$TOMCAT_VERSION/bi
     rm /tmp/tomcat.tar.gz
 
 # Copy the web application to the Tomcat webapps directory
-COPY target/sample-webapp.war /app/sample-webapp.war
+COPY /home/ubuntu/workspace/Docker/sample-webapp/target/sample-webapp.war /app/sample-webapp.war
 
 # Expose the default Tomcat port
 EXPOSE 8080
