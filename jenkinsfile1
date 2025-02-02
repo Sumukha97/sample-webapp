@@ -1,6 +1,16 @@
 pipeline {
     agent { label 'slave_key1' }  // Use the slave_key1 node
-
+stage('Checkout Code') {
+            steps {
+                script {
+                    echo "Cloning GitHub repository"
+                    sh """
+                    git clone ${https://github.com/Sumukha97/sample-webapp.git}
+                    cd sample-webapp
+                    """
+                }
+            }
+        }
     environment {
         AWS_REGION = 'ap-south-1'  // Set your AWS region
         ECR_URI = '816069160812.dkr.ecr.ap-south-1.amazonaws.com'  // Your ECR URI
@@ -35,17 +45,7 @@ pipeline {
             }
         }
 
-        stage('Checkout Code') {
-            steps {
-                script {
-                    echo "Cloning GitHub repository"
-                    sh """
-                    git clone ${https://github.com/Sumukha97/sample-webapp.git}
-                    cd sample-webapp
-                    """
-                }
-            }
-        }
+        
 
         stage('Maven Build') {
             steps {
