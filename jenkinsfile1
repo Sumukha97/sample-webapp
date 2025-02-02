@@ -52,8 +52,8 @@ pipeline {
                 script {
                     echo "Configuring AWS CLI"
                     // Using the credential IDs "access_key" and "secret_key"
-                    withCredentials([
-                        string(credentialsId: 'access_key', variable: 'AWS_ACCESS_KEY_ID'), 
+                    withCredentials([ 
+                        string(credentialsId: 'access_key', variable: 'AWS_ACCESS_KEY_ID'),
                         string(credentialsId: 'secret_key', variable: 'AWS_SECRET_ACCESS_KEY')
                     ]) {
                         // AWS Access Key and Secret Key are injected into the environment variables
@@ -72,8 +72,8 @@ pipeline {
                 script {
                     echo "Logging in to AWS ECR"
                     // Using the credential IDs "access_key" and "secret_key"
-                    withCredentials([
-                        string(credentialsId: 'access_key', variable: 'AWS_ACCESS_KEY_ID'), 
+                    withCredentials([ 
+                        string(credentialsId: 'access_key', variable: 'AWS_ACCESS_KEY_ID'),
                         string(credentialsId: 'secret_key', variable: 'AWS_SECRET_ACCESS_KEY')
                     ]) {
                         sh """
@@ -83,6 +83,18 @@ pipeline {
                         aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_URI}
                         """
                     }
+                }
+            }
+        }
+
+        stage('Maven Build') {
+            steps {
+                script {
+                    echo "Running Maven clean install"
+                    sh '''
+                    cd sample-webapp
+                    mvn clean install
+                    '''
                 }
             }
         }
