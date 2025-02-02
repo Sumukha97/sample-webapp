@@ -26,17 +26,27 @@ pipeline {
         }
 
         stage('Install AWS CLI') {
-            steps {
-                script {
-                    echo "Installing AWS CLI v2"
-                    sh '''
-                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                    unzip awscliv2.zip
-                    sudo ./aws/install --update --no-ansi --no-interaction
-                    '''
-                }
-            }
+    steps {
+        script {
+            echo "Installing AWS CLI v2"
+
+            // Remove any existing AWS CLI installation files or directories
+            sh '''
+            sudo rm -rf /usr/local/aws-cli
+            sudo rm -rf /usr/local/bin/aws
+            sudo rm -rf awscliv2.zip aws/
+            '''
+            
+            // Download and install AWS CLI without interaction
+            sh '''
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install --update --no-ansi --no-interaction
+            '''
         }
+    }
+}
+
 
         stage('AWS Configuration') {
             steps {
