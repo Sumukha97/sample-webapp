@@ -1,5 +1,6 @@
 pipeline {
-    agent { label 'slave_key1' }  // Use the slave_key1 node
+    agent any
+  // Use the slave_key1 node
 
     environment {
         AWS_REGION = 'ap-south-1'  // Set your AWS region
