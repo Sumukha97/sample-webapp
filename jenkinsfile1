@@ -1,23 +1,27 @@
 pipeline {
     agent { label 'slave_key1' }  // Use the slave_key1 node
-stage('Checkout Code') {
+
+    environment {
+        AWS_REGION = 'ap-south-1'  // Set your AWS region
+        ECR_URI = '816069160812.dkr.ecr.ap-south-1.amazonaws.com'  // Your ECR URI
+        REPOSITORY_NAME = 'sample-webapp'  // Your ECR repository name
+        GIT_URL = 'https://github.com/Sumukha97/sample-webapp.git'  // Your GitHub repository URL
+        GIT_BRANCH = 'main'  // Update this if your default branch is 'main'
+    }
+
+    stages {
+        stage('Checkout Code') {
             steps {
                 script {
                     echo "Cloning GitHub repository"
                     sh """
-                    git clone ${https://github.com/Sumukha97/sample-webapp.git}
+                    git clone --branch ${GIT_BRANCH} ${GIT_URL}
                     cd sample-webapp
                     """
                 }
             }
         }
-    environment {
-        AWS_REGION = 'ap-south-1'  // Set your AWS region
-        ECR_URI = '816069160812.dkr.ecr.ap-south-1.amazonaws.com'  // Your ECR URI
-        REPOSITORY_NAME = 'sample-webapp'  // Your ECR repository name
-    }
 
-    stages {
         stage('Install AWS CLI') {
             steps {
                 script {
@@ -39,22 +43,8 @@ stage('Checkout Code') {
                     sh '''
                     aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
                     aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-                    aws configure set region ${ap-south-1}
+                    aws configure set region ${AWS_REGION}
                     '''
-                }
-            }
-        }
-
-        
-
-        stage('Maven Build') {
-            steps {
-                script {
-                    echo "Building project with Maven"
-                    sh """
-                    cd sample-webapp
-                    mvn clean install
-                    """
                 }
             }
         }
@@ -64,7 +54,7 @@ stage('Checkout Code') {
                 script {
                     echo "Logging in to AWS ECR"
                     sh """
-                    aws ecr get-login-password --region ${ap-south-1} | docker login --username AWS --password-stdin ${816069160812.dkr.ecr.ap-south-1.amazonaws.com/sample-webapp}
+                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_URI}
                     """
                 }
             }
@@ -74,7 +64,7 @@ stage('Checkout Code') {
             steps {
                 script {
                     echo "Building Docker image..."
-                    sh 'docker build -t ${ REPOSITORY_NAME}:latest .'
+                    sh 'docker build -t ${REPOSITORY_NAME}:latest .'
                 }
             }
         }
@@ -84,8 +74,8 @@ stage('Checkout Code') {
                 script {
                     echo "Tagging and pushing the Docker image to ECR"
                     sh """
-                    docker tag ${REPOSITORY_NAME}:latest ${816069160812.dkr.ecr.ap-south-1.amazonaws.com/sample-webapp}/${REPOSITORY_NAME}:latest
-                    docker push ${816069160812.dkr.ecr.ap-south-1.amazonaws.com/sample-webapp}/${REPOSITORY_NAME}:latest
+                    docker tag ${REPOSITORY_NAME}:latest ${ECR_URI}/${REPOSITORY_NAME}:latest
+                    docker push ${ECR_URI}/${REPOSITORY_NAME}:latest
                     """
                 }
             }
