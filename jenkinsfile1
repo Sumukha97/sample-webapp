@@ -5,7 +5,6 @@ pipeline {
         AWS_REGION = 'ap-south-1'  // Set your AWS region
         ECR_URI = '816069160812.dkr.ecr.ap-south-1.amazonaws.com'  // Your ECR URI
         REPOSITORY_NAME = 'sample-webapp'  // Your ECR repository name
-        GIT_URL = 'https://github.com/your-username/sample-webapp.git'  // Your GitHub repository URL
     }
 
     stages {
@@ -41,7 +40,7 @@ pipeline {
                 script {
                     echo "Cloning GitHub repository"
                     sh """
-                    git clone ${GIT_URL}
+                    git clone ${https://github.com/Sumukha97/sample-webapp.git}
                     cd sample-webapp
                     """
                 }
