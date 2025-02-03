@@ -64,6 +64,16 @@ pipeline {
             }
         }
 
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    echo "Running Docker container on port 8080"
+                    // Run the container in detached mode and map port 8080 to the host
+                    sh 'docker run -d -p 8080:8080 --name ${REPOSITORY_NAME}-container ${REPOSITORY_NAME}:latest'
+                }
+            }
+        }
+
         stage('Tag and Push Docker Image') {
             steps {
                 script {
