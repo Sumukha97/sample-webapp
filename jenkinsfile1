@@ -1,86 +1,86 @@
+@Library('jenkins-shared-library') _
+
 pipeline {
-    agent any  
+    agent any
 
     environment {
-        AWS_REGION = 'ap-south-1'  
-        ECR_URI = '816069160812.dkr.ecr.ap-south-1.amazonaws.com' 
-        REPOSITORY_NAME = 'sample-webapp'  
-        GIT_URL = 'https://github.com/Sumukha97/sample-webapp.git'  
-        GIT_BRANCH = 'main'  
+        // Access constants from the shared library
+        constants = constants()  // Fetch constants from the shared library
+
+        AWS_ACCOUNT_ID = "${constants.AWS_ACCOUNT_ID}"
+        AWS_DEFAULT_REGION = "${constants.AWS_DEFAULT_REGION}"
+        IMAGE_REPO_NAME = "${constants.IMAGE_REPO_NAME}"
+        IMAGE_TAG = "latest"
+        REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+        GIT_REPO_URL = "${constants.GIT_REPO_URL}"
+        GIT_CREDENTIALS_ID = "${constants.GIT_CREDENTIALS_ID}"
+        ECR_CREDENTIALS_ID = "${constants.ECR_CREDENTIALS_ID}"
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Cleanup Docker Environment') {
             steps {
                 script {
-                    echo "Cloning GitHub repository"
-                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    sh 'docker system prune -af || true'
+                }
+            }
+        }
+
+        stage('Logging into AWS ECR') {
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: ECR_CREDENTIALS_ID]]) {
                         sh """
-                        if [ -d "sample-webapp" ]; then
-                            rm -rf sample-webapp
-                        fi
-                        git clone https://github.com/Sumukha97/sample-webapp.git
+                            aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | \
+                            docker login --username AWS --password-stdin ${REPOSITORY_URI}
                         """
                     }
                 }
             }
         }
 
-        stage('ECR Login') {
+        stage('Cloning Git Repository') {
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: GIT_REPO_URL,
+                        credentialsId: GIT_CREDENTIALS_ID
+                    ]]
+                ])
+            }
+        }
+
+        stage('Building Docker Image') {
             steps {
                 script {
-                    echo "Logging in to AWS ECR"
-                    withCredentials([ 
-                        string(credentialsId: 'access_key', variable: 'AWS_ACCESS_KEY_ID'),
-                        string(credentialsId: 'secret_key', variable: 'AWS_SECRET_ACCESS_KEY')
-                    ]) {
-                        sh """
-                        aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-                        aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-                        aws configure set region ${AWS_REGION}
-                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_URI}
-                        """
-                    }
+                    sh "docker build -t ${IMAGE_REPO_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
 
-        stage('Maven Build') {
+        stage('Tagging Docker Image') {
             steps {
                 script {
-                    sh '''
-                    mvn clean install
-                    '''
+                    sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:${IMAGE_TAG}"
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Pushing Image to ECR') {
             steps {
                 script {
-                    echo "Building Docker image..."
-                    sh 'docker build -t ${REPOSITORY_NAME}:latest .'
+                    sh "docker push ${REPOSITORY_URI}:${IMAGE_TAG}"
                 }
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Final Cleanup') {
             steps {
                 script {
-                    echo "Running Docker container on port 8080"
-                    // Run the container in detached mode and map port 8080 to the host
-                    sh 'docker run -d -p 8080:8080 --name ${REPOSITORY_NAME}-container ${REPOSITORY_NAME}:latest'
-                }
-            }
-        }
-
-        stage('Tag and Push Docker Image') {
-            steps {
-                script {
-                    sh """
-                    docker tag ${REPOSITORY_NAME}:latest ${ECR_URI}/${REPOSITORY_NAME}:latest
-                    docker push ${ECR_URI}/${REPOSITORY_NAME}:latest
-                    """
+                    sh "docker rmi -f ${IMAGE_REPO_NAME}:${IMAGE_TAG} || true"
+                    sh "docker rmi -f ${REPOSITORY_URI}:${IMAGE_TAG} || true"
                 }
             }
         }
