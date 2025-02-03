@@ -25,4 +25,4 @@ COPY /target/sample-webapp.war $CATALINA_HOME/webapps/
 EXPOSE 8080
 
 # Start Tomcat
-CMD ["catalina.sh", "run"
+CMD ["catalina.sh", "run"]
